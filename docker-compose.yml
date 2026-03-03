@@ -1,0 +1,55 @@
+# --- INÍCIO DA DEFINIÇÃO DOS SERVIÇOS/CONTÊINERES ---
+services:
+
+  # SERVIÇO DO NGINX REVERSE PROXY
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certs:/etc/nginx/certs:ro
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    restart: always
+
+  # SERVIÇO DO LET'S ENCRYPT
+  letsencrypt-companion:
+    image: nginxproxy/acme-companion
+    container_name: letsencrypt-companion
+    restart: always
+    volumes:
+      - certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+
+  # O SERVIÇO DA SUA APLICAÇÃO PYTHON (FLASK)
+  flask-app:
+    build: .
+    container_name: flask-app
+    restart: always
+    env_file:
+      - .env
+  
+    expose:
+      - "8080"
+    environment:
+      # O seu nome de domínio
+      - VIRTUAL_HOST=thalyssondel.duckdns.org
+      # A porta interna em que o servidor Python está rodando
+      - VIRTUAL_PORT=8080
+      # O domínio para o qual o Let's Encrypt deve gerar o certificado
+      - LETSENCRYPT_HOST=thalyssondel.duckdns.org
+      # O seu e-mail para receber notificações do Let's Encrypt
+      - LETSENCRYPT_EMAIL=contato.thalyssondel@gmail.com
+
+# Define os volumes que serão partilhados entre os contêineres
+volumes:
+  certs:
+  vhost:
+  html:
