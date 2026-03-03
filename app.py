@@ -13,10 +13,15 @@ def serve_videos(filename):
 def serve_imagens(filename):
     return send_from_directory('images', filename)
 
+@app.route('/.well-known/discord')
+def discord_verification():
+    dh = os.getenv('dh', '')
+    return dh
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
 if __name__ == '__main__':
+
     app.run(host='0.0.0.0', port=8080)
