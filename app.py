@@ -16,6 +16,10 @@ def serve_imagens(filename):
 @app.route('/.well-known/discord')
 def discord_verification():
     dh = os.getenv('dh', '')
+
+    if dh and not dh.startswith('dh='):
+        return f"dh={dh}"
+    
     return dh
 
 @app.route('/')
@@ -25,3 +29,4 @@ def home():
 if __name__ == '__main__':
 
     app.run(host='0.0.0.0', port=8080)
+
